@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.yeaske/modelanalyzer-mcp",
+  "title": "AI Model Analyzer",
+  "description": "Recommend, compare and price AI models, and check retirement dates, from modelanalyzer.ai.",
+  "repository": {
+    "url": "https://github.com/yeaske/modelanalyzer-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://modelanalyzer.ai/open-data/",
+  "version": "0.1.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "modelanalyzer-mcp",
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

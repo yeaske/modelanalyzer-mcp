@@ -52,6 +52,18 @@ npm test
 
 Bug reports and ideas are welcome in [issues](https://github.com/yeaske/modelanalyzer-mcp/issues). The rankings and numbers themselves come from the site; see its [methodology](https://modelanalyzer.ai/about/).
 
+## Releasing
+
+Bump the version in `package.json`, `server.json` (twice) and `src/server.js`; `npm test` checks they agree. Then:
+
+```bash
+npm publish
+mcp-publisher login github
+mcp-publisher publish
+```
+
+The second step lists the new version in the [MCP Registry](https://registry.modelcontextprotocol.io/) as `io.github.yeaske/modelanalyzer-mcp`.
+
 ## License
 
 MIT, © Digital Designs Now.
