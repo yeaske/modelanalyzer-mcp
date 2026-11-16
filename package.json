@@ -1,6 +1,7 @@
 {
   "name": "modelanalyzer-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
+  "mcpName": "io.github.yeaske/modelanalyzer-mcp",
   "description": "MCP server for AI Model Analyzer: recommend, compare and price AI models, and check retirement dates, from modelanalyzer.ai's free open data.",
   "license": "MIT",
   "type": "module",

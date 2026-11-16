@@ -45,7 +45,7 @@ function tool(fn) {
   };
 }
 
-const server = new McpServer({ name: "modelanalyzer", version: "0.1.1" });
+const server = new McpServer({ name: "modelanalyzer", version: "0.1.2" });
 const readOnly = { readOnlyHint: true, openWorldHint: true };
 
 server.registerTool(
