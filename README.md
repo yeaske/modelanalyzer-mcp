@@ -1,0 +1,57 @@
+# modelanalyzer-mcp
+
+An [MCP](https://modelcontextprotocol.io/) server that lets your coding assistant recommend, compare and price AI models, and check when they retire, using the free open data from [AI Model Analyzer](https://modelanalyzer.ai).
+
+It runs locally over stdio and reads one public file, `https://modelanalyzer.ai/data/summary.json`, which the site rebuilds every night. There is no API key, no account and no server to host. Answers link back to the matching page on the site.
+
+## Install
+
+Add it to your assistant's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "modelanalyzer": { "command": "npx", "args": ["-y", "modelanalyzer-mcp"] }
+  }
+}
+```
+
+For Claude Code:
+
+```bash
+claude mcp add modelanalyzer -- npx -y modelanalyzer-mcp
+```
+
+Requires Node.js 20 or later.
+
+## Tools
+
+| Tool | What it does |
+| --- | --- |
+| `list_scenarios` | The use-case scenarios that `recommend_models` ranks for |
+| `recommend_models` | The site's ranking for a scenario (quality blended with cost at a typical workload), optionally under a monthly budget or open weights only |
+| `search_models` | Find models by name, id or maker, with Analyzer Index, price, cost per task, speed and context |
+| `compare_models` | Side-by-side table of 2 to 6 models |
+| `estimate_cost` | Cost per request, day and month at list price for a token volume |
+| `model_retirements` | Announced API shutdown dates with each maker's recommended replacement |
+
+Example prompts: "Which model should I use for a customer support bot under $100 a month?", "Compare Claude Opus 5.5 and GPT-6.1 Sol", "Is any model I use being retired soon?"
+
+## Data and credit
+
+Numbers are exactly what modelanalyzer.ai shows, generated nightly. Cost per task and speed come from [Artificial Analysis](https://artificialanalysis.ai/); Arena scores from [LMArena](https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset) (CC-BY 4.0). See the [methodology](https://modelanalyzer.ai/about/) and [open data](https://modelanalyzer.ai/open-data/) pages.
+
+The summary is cached in memory for six hours. Set `MODELANALYZER_BASE_URL` to read from another host (for example a local build).
+
+## Development
+
+```bash
+npm install
+npm test
+```
+
+Bug reports and ideas are welcome in [issues](https://github.com/yeaske/modelanalyzer-mcp/issues). The rankings and numbers themselves come from the site; see its [methodology](https://modelanalyzer.ai/about/).
+
+## License
+
+MIT, © Digital Designs Now.
