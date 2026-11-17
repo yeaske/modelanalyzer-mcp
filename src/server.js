@@ -5,6 +5,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { fetchSummary, resolveBaseUrl } from "./summary.js";
 import {
   compareModels,
   estimateCost,
@@ -15,8 +16,8 @@ import {
   searchModels,
 } from "./tools.js";
 
-const BASE_URL = (process.env.MODELANALYZER_BASE_URL ?? "https://modelanalyzer.ai").replace(/\/$/, "");
-const SUPPORTED_VERSION = 1;
+// Validated at startup so a bad setting fails loudly instead of on every call.
+const BASE_URL = resolveBaseUrl(process.env.MODELANALYZER_BASE_URL);
 // The site rebuilds nightly; refetch at most every six hours.
 const TTL_MS = 6 * 60 * 60 * 1000;
 
@@ -24,14 +25,15 @@ let cache = null;
 
 async function summary() {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.data;
-  const res = await fetch(`${BASE_URL}/data/summary.json`, { headers: { accept: "application/json" } });
-  if (!res.ok) throw new Error(`Could not load ${BASE_URL}/data/summary.json (HTTP ${res.status}).`);
-  const data = await res.json();
-  if (data.version > SUPPORTED_VERSION) {
-    throw new Error(`summary.json version ${data.version} is newer than this package supports; update modelanalyzer-mcp.`);
+  try {
+    const data = await fetchSummary(BASE_URL);
+    cache = { at: Date.now(), data };
+    return data;
+  } catch (err) {
+    // Keep answering from the last good copy if the site is briefly unreachable.
+    if (cache) return cache.data;
+    throw err;
   }
-  cache = { at: Date.now(), data };
-  return data;
 }
 
 function tool(fn) {
@@ -45,7 +47,7 @@ function tool(fn) {
   };
 }
 
-const server = new McpServer({ name: "modelanalyzer", version: "0.1.2" });
+const server = new McpServer({ name: "modelanalyzer", version: "0.1.3" });
 const readOnly = { readOnlyHint: true, openWorldHint: true };
 
 server.registerTool(
@@ -65,8 +67,8 @@ server.registerTool(
     description:
       "AI Model Analyzer's current ranking for a use-case scenario, blending benchmark quality with cost at a typical workload. Optionally filter by a monthly budget at that workload or by open weights.",
     inputSchema: {
-      scenario: z.string().describe("Scenario id or name from list_scenarios, e.g. coding-assistant"),
-      maxMonthlyCostUSD: z.number().positive().optional().describe("Only models at or under this monthly cost at the scenario's workload"),
+      scenario: z.string().max(100).describe("Scenario id or name from list_scenarios, e.g. coding-assistant"),
+      maxMonthlyCostUSD: z.number().positive().max(1e9).optional().describe("Only models at or under this monthly cost at the scenario's workload"),
       openWeightsOnly: z.boolean().optional().describe("Only models with downloadable weights"),
       limit: z.number().int().min(1).max(20).optional().describe("How many to return (default 5)"),
     },
@@ -81,7 +83,7 @@ server.registerTool(
     title: "Search models",
     description: "Find models by name, id or maker. Returns ids for the other tools, plus Analyzer Index, price, cost per task, speed and context.",
     inputSchema: {
-      query: z.string().describe("Model name, id or maker, e.g. 'claude sonnet' or 'gpt-6'"),
+      query: z.string().min(1).max(200).describe("Model name, id or maker, e.g. 'claude sonnet' or 'gpt-6'"),
       limit: z.number().int().min(1).max(25).optional(),
     },
     annotations: readOnly,
@@ -95,7 +97,7 @@ server.registerTool(
     title: "Compare models",
     description: "Side-by-side table of 2 to 6 models: Analyzer Index and rank, input/output price, cost per task, speed, time to first token, context, open weights and announced retirement.",
     inputSchema: {
-      models: z.array(z.string()).min(2).max(6).describe("Model ids or names"),
+      models: z.array(z.string().min(1).max(200)).min(2).max(6).describe("Model ids or names"),
     },
     annotations: readOnly,
   },
@@ -108,10 +110,10 @@ server.registerTool(
     title: "Estimate API cost",
     description: "Cost per request, day and month for a model at list price, given tokens per request and requests per day.",
     inputSchema: {
-      model: z.string().describe("Model id or name"),
-      inputTokens: z.number().int().nonnegative().describe("Input tokens per request"),
-      outputTokens: z.number().int().nonnegative().describe("Output tokens per request"),
-      requestsPerDay: z.number().int().positive().optional().describe("Requests per day (default 1)"),
+      model: z.string().min(1).max(200).describe("Model id or name"),
+      inputTokens: z.number().int().nonnegative().max(1e9).describe("Input tokens per request"),
+      outputTokens: z.number().int().nonnegative().max(1e9).describe("Output tokens per request"),
+      requestsPerDay: z.number().int().positive().max(1e9).optional().describe("Requests per day (default 1)"),
     },
     annotations: readOnly,
   },
