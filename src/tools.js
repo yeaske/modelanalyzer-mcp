@@ -1,5 +1,6 @@
 // Pure functions over /data/summary.json. No network, no state: the server
-// fetches the summary and passes it in, and the tests use a fixture.
+// fetches the summary, cleans it with prepareSummary (summary.js) and passes
+// it in; the tests use a fixture.
 
 const usd = (v, digits = 2) =>
   v == null ? "n/a" : v < 0.01 && v > 0 ? `$${Number(v.toPrecision(2))}` : `$${v.toFixed(digits)}`;
@@ -106,7 +107,8 @@ export function compareModels(summary, { models }) {
     ["Open weights", ...picked.map((m) => (m.openWeights ? "yes" : "no"))],
     ["Retirement", ...picked.map((m) => (m.retirement ? m.retirement.date : "none announced"))],
   ];
-  const table = rows.map((r) => `| ${r.join(" | ")} |`);
+  // Escape pipes so a name can't add or shift table columns.
+  const table = rows.map((r) => `| ${r.map((c) => String(c).replace(/\|/g, "\\|")).join(" | ")} |`);
   table.splice(1, 0, `|${" --- |".repeat(picked.length + 1)}`);
   const compareUrl = `${summary.site}/compare/?ids=${picked.map((m) => m.id).join(",")}`;
   return `${table.join("\n")}\n\nSide by side on the site: ${compareUrl}`;

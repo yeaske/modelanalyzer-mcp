@@ -41,7 +41,11 @@ Example prompts: "Which model should I use for a customer support bot under $100
 
 Numbers are exactly what modelanalyzer.ai shows, generated nightly. Cost per task and speed come from [Artificial Analysis](https://artificialanalysis.ai/); Arena scores from [LMArena](https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset) (CC-BY 4.0). See the [methodology](https://modelanalyzer.ai/about/) and [open data](https://modelanalyzer.ai/open-data/) pages.
 
-The summary is cached in memory for six hours. Set `MODELANALYZER_BASE_URL` to read from another host (for example a local build).
+The summary is cached in memory for six hours. Set `MODELANALYZER_BASE_URL` to read from another host: https only, or plain http to `localhost` for a local build.
+
+## Security
+
+The server only reads: it runs no commands, touches no files, opens no ports and sends nothing about you. It downloads one public file and treats it as untrusted before any of it reaches your assistant: the structure is checked, text is stripped of control and invisible characters and capped in length, ids are limited to a safe alphabet, links must be on the site it read from, and the download is limited to 15 seconds and 5 MB. Report security issues privately through GitHub's "Report a vulnerability" on this repository.
 
 ## Development
 
